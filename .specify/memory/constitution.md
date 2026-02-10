@@ -1,50 +1,74 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!-- 
+SYNC IMPACT REPORT
+Version: Initial -> 1.0.0
+Modified Principles:
+- Defined I. Layered Architecture
+- Defined II. Database Per Service
+- Defined III. RESTful API Standards
+- Defined IV. Resilience & Caching
+- Defined V. Technology Compliance
+Added Sections:
+- Additional Standards (DTOs, Normalization)
+- Development Workflow (API First)
+Templates Updated:
+- None (Templates reference constitution generically)
+TODOs:
+- None
+-->
+
+# Siloam SDD EMR Constitution
+<!-- Specification for Siloam SDD EMR Node.js Backend -->
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Layered Architecture (NON-NEGOTIABLE)
+<!-- Source: Siloam Development Guide Ch.3 -->
+Strict separation of concerns is enforced: Middleware → Controller → Service → Repository. Dependencies flow downwards only (never upwards). Controllers MUST handle HTTP req/res only and contain NO business logic or direct DB access. Services orchestrate business logic. Repositories handle data access.
+**Rationale**: Ensures maintainability, testability, and clear separation of responsibilities as per Siloam Microservice Architecture.
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+### II. Database Per Service
+<!-- Source: Siloam Development Guide Ch.2 -->
+Each microservice MUST own its dedicated database. Direct database access across service boundaries is PROHIBITED. Data sharing MUST be performed via API calls. Shared data needs its own service (e.g., Customer Service owns customer data).
+**Rationale**: Enables independent scaling, schema evolution, and fault isolation ("The Golden Rule").
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### III. RESTful API Standards
+<!-- Source: Siloam Development Guide Ch.5, Ch.6, Ch.7 -->
+URIs MUST use nouns for resources (e.g., `/customers`, not `/getCustomers`) and be plural. Filtering, sorting, and pagination MUST use query parameters (e.g., `?sort=-created_at`). Versioning MUST be done via URI path (e.g., `/v1/...`). OpenAPI/Swagger documentation is MANDATORY for all APIs.
+**Rationale**: Ensures consistent, intuitive, and discoverable interfaces across the ecosystem.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### IV. Resilience & Caching
+<!-- Source: Siloam Development Guide Ch.3 -->
+External service calls MUST implement Circuit Breaker and Retry patterns (with exponential backoff). Caching (Redis/Valkey) using the Cache-Aside pattern is REQUIRED for frequently accessed, read-heavy data. Aggressive timeouts MUST be set for all external dependencies.
+**Rationale**: Prevents cascading failures and ensures system stability under load.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### V. Technology Compliance
+<!-- Source: Siloam Development Guide Ch.1 -->
+Backend services MUST use Node.js (Latest LTS), TypeScript, and PostgreSQL. MongoDB usage requires explicit Architecture Board approval. 
+**Rationale**: Standardizes the technology stack to ensure consistent tooling, knowledge sharing, and operational efficiency.
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+## Additional Standards
+<!-- Detailed technical constraints from Siloam Guide -->
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+### Data & Code Patterns
+*   **DTO Pattern**: Request and Response DTOs are MANDATORY to decouple API contracts from domain entities.
+*   **Normalization**: Database schemas MUST follow at least 2NF (Second Normal Form) to reduce redundancy.
+*   **Logging**: Middleware MUST handle cross-cutting concerns like logging and authentication.
+*   **Async Communication**: Prefer asynchronous messaging (AWS SQS/SNS) for non-critical inter-service notifications.
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+## Development Workflow
+<!-- Process requirements -->
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+### API-First Design
+*   **Contract Definition**: API contracts (following Principle III) and OpenAPI specifications should be defined before implementation logic.
+*   **Reviews**: Code reviews MUST verify adherence to Layered Architecture (Principle I) - specifically checking that Controllers are thin and Repositories contain no business logic.
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
+<!-- Constitution maintenance -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+This Constitution supersedes local READMEs where conflicts exist.
+Amendments must follow semantic versioning.
+*   **Major**: Breaking changes to architectural patterns (e.g., changing Layered Architecture).
+*   **Minor**: Adding new standard technologies or resilience patterns.
+*   **Patch**: Clarifications or typo fixes.
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Version**: 1.0.0 | **Ratified**: 2026-02-09 | **Last Amended**: 2026-02-09
