@@ -1,0 +1,294 @@
+openapi: 3.0.3
+info:
+  title: Patient Domain API
+  version: 1.0.0
+  description: API for managing Patient Registration, Search, and Demographics.
+servers:
+  - url: /v1
+paths:
+  /patients:
+    post:
+      summary: Create a new patient
+      operationId: createPatient
+      description: Registers a new patient. Auto-generates MRN.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePatientRequest'
+      responses:
+        '201':
+          description: Patient created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PatientResponse'
+        '400':
+          description: Invalid input
+        '409':
+          description: Conflict Not Unique (National ID)
+    get:
+      summary: Search patients
+      operationId: searchPatients
+      parameters:
+        - name: mrn
+          in: query
+          schema:
+            type: string
+        - name: national_id
+          in: query
+          schema:
+            type: string
+        - name: name
+          in: query
+          schema:
+            type: string
+        - name: birth_date
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: List of patients
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PatientResponse'
+
+  /patients/{id}:
+    get:
+      summary: Get patient by ID
+      operationId: getPatientById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Patient found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PatientResponse'
+        '404':
+          description: Patient not found
+
+    put:
+      summary: Update patient
+      operationId: updatePatient
+      description: Full or partial update of patient details.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePatientRequest'
+      responses:
+        '200':
+          description: Patient updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PatientResponse'
+        '404':
+          description: Patient not found
+        '409':
+          description: Conflict (Optimistic Locking or Unique Constraint)
+
+    delete:
+      summary: Delete patient (Logical)
+      operationId: deletePatient
+      description: Marks a patient as deleted (or physically deletes if allowed).
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Patient deleted successfully
+        '404':
+          description: Patient not found
+
+  /patients/{id}/merge:
+    post:
+      summary: Merge patient
+      operationId: mergePatient
+      description: Merges this patient (Source) into another (Target). Source will be deleted.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Source Patient ID (Duplicate)
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                target_patient_id:
+                  type: string
+                  format: uuid
+                  description: The Primary Patient ID to keep.
+              required:
+                - target_patient_id
+      responses:
+        '200':
+          description: Merge successful
+        '404':
+          description: One or both patients not found
+
+components:
+  schemas:
+    CreatePatientRequest:
+      type: object
+      required:
+        - name
+        - birth_date
+        - gender
+        - national_id
+        - audit_info
+      properties:
+        name:
+          type: string
+        birth_date:
+          type: string
+          format: date
+        gender:
+          type: string
+          enum: [male, female]
+        national_id:
+          type: string
+        contact_info:
+          $ref: '#/components/schemas/ContactInfo'
+        address_info:
+          type: array
+          items:
+            $ref: '#/components/schemas/AddressInfo'
+        audit_info:
+          $ref: '#/components/schemas/AuditInfo'
+    
+    UpdatePatientRequest:
+      type: object
+      properties:
+        name: 
+          type: string
+        contact_info:
+          $ref: '#/components/schemas/ContactInfo'
+        address_info:
+           type: array
+           items:
+             $ref: '#/components/schemas/AddressInfo'
+        family_info:
+           $ref: '#/components/schemas/FamilyInfo'
+        clinical_info:
+           $ref: '#/components/schemas/ClinicalInfo'
+        payer_info:
+           $ref: '#/components/schemas/PayerInfo'
+        audit_info:
+           $ref: '#/components/schemas/AuditInfo'
+    
+    PatientResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        mrn:
+          type: string
+        name:
+          type: string
+        status:
+          type: string
+        contact_info:
+          $ref: '#/components/schemas/ContactInfo'
+        # ... (include other fields mapping to DB)
+
+    ContactInfo:
+      type: object
+      properties:
+        phones:
+          type: array
+          items:
+            type: string
+        emails:
+          type: array
+          items:
+            type: string
+            format: email
+
+    AddressInfo:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [current, permanent]
+        street:
+          type: string
+        city_id:
+          type: string
+        postal_code:
+          type: string
+
+    FamilyInfo:
+      type: object
+      properties:
+        father_name:
+          type: string
+        mother_name:
+          type: string
+        emergency_contacts:
+          type: array
+          items:
+            type: object
+            properties:
+              name: 
+                type: string
+              phone:
+                type: string
+    
+    ClinicalInfo:
+      type: object
+      properties:
+        blood_type:
+          type: string
+          enum: ['A', 'B', 'AB', 'O']
+    
+    PayerInfo:
+      type: object
+      properties:
+        payer_id:
+          type: string
+        policy_number:
+          type: string
+
+    AuditInfo:
+       type: object
+       required:
+         - user_id
+         - workstation_id
+       properties:
+         user_id:
+           type: string
+         workstation_id:
+           type: string
