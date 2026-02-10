@@ -47,3 +47,12 @@ export type FamilyInfo = z.infer<typeof FamilyInfoSchema>;
 export type ClinicalInfo = z.infer<typeof ClinicalInfoSchema>;
 export type PayerInfo = z.infer<typeof PayerInfoSchema>;
 export type AuditInfo = z.infer<typeof AuditInfoSchema>;
+
+/**
+ * Audit Context - Extracted from request headers/JWT
+ * Used for tracking who made changes and from where
+ */
+export interface AuditContext {
+  userId: string;
+  workstationId: string;
+}
