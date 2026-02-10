@@ -5,9 +5,10 @@ import { auditMiddleware } from './middleware/audit';
 import swaggerUi from 'swagger-ui-express';
 import YAML from 'yamljs';
 import path from 'path';
+import { config } from './config/env';
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = config.port;
 
 app.use(json());
 app.use(auditMiddleware);

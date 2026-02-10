@@ -101,9 +101,22 @@ migrations/         # Drizzle SQL migration files
 
 ## 🔐 Environment Variables
 
-The project comes with defaults suitable for local development.
+The application can be configured using a `.env` file in the root directory.
+
+### Setup
+
+1. Copy the example environment file:
+
+```bash
+cp .env.example .env
+```
+
+2. Modify the values in `.env` as needed for your environment.
+
+### Available Variables
 
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `PORT` | 3000 | API Server Port |
 | `DATABASE_URL` | `postgres://siloam:password@localhost:5432/patient_db` | PostgreSQL Connection String |
+| `NODE_ENV` | `development` | Application environment (development/production) |
